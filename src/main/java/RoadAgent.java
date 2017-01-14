@@ -1,7 +1,6 @@
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.CyclicBehaviour;
-import jade.core.behaviours.TickerBehaviour;
+import jade.core.behaviours.*;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.tools.sniffer.Message;
@@ -21,41 +20,13 @@ public class RoadAgent extends Agent {
     outNode = (Integer) arg[3];
     delay = (Integer) arg[4];
 
-    //putCar
-    addBehaviour(new CyclicBehaviour(this) {
-      @Override
-      public void action() {
-        ACLMessage msg = receive(MessageTemplate.MatchPerformative(ACLMessage.INFORM));
-        if (msg != null) {
-          System.out.println(msg.getContent() + " added to " + getName());
-          cars.add(msg.getContent());
-        }else {
-          block();
-        }
-      }
-    });
+    view = City.instance().getRoadView(inNode, outNode);
 
-    addBehaviour(new CyclicBehaviour(this) {
-      @Override
-      public void action() {
-        ACLMessage msg = receive(MessageTemplate.MatchPerformative(ACLMessage.REFUSE));
-        if (msg != null) {
-          if(cars.peek().equals(msg.getSender().getName())) {
-            System.out.println("Car Stopped");
-            cars.remove();
-          }
-        }else {
-          block();
-        }
-      }
-    });
-
-
-    //process car
+    //process last car in queue
     addBehaviour(new TickerBehaviour(this, delay) {
       @Override
       protected void onTick() {
-        if(cars.size() > 0) {;
+        if(cars.size() > 0) {
           ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
           msg.setContent(outNode + "");
           AID id = new AID(cars.peek(), true);
@@ -65,33 +36,60 @@ public class RoadAgent extends Agent {
       }
     });
 
+    //listen car
     addBehaviour(new CyclicBehaviour(this) {
       @Override
       public void action() {
         ACLMessage msg = receive(MessageTemplate.MatchPerformative(ACLMessage.PROPOSE));
         if (msg != null) {
           int roadaddr = Integer.parseInt(msg.getContent());
-          if(cars.peek().equals(msg.getSender().getName())){
-            if(addresses.containsKey(roadaddr)){
-              ACLMessage out = new ACLMessage(ACLMessage.INFORM);
-              out.setContent(cars.remove());;
-              out.addReceiver(addresses.get(roadaddr));
-              send(out);
-            }else{
-              System.out.println("ERRRRORRRR WRONG ADDRESS " + roadaddr + " in " + getName());
+          if(cars.size() > 0 && cars.peek().equals(msg.getSender().getName())){
+            if(roadaddr == -1){
+              System.out.println("Car " + cars.peek() + "stopped");
+              cars.remove();
+              view.removeCar();
+            }else {
+              if (addresses.containsKey(roadaddr)) {
+                ACLMessage out = new ACLMessage(ACLMessage.INFORM);
+                out.setContent(cars.remove());
+                out.addReceiver(addresses.get(roadaddr));
+                send(out);
+                view.removeCar();
+              } else {
+                System.out.println("Car " + cars.peek() + " proposed wrong address");
+              }
             }
           }
+        }else{
+          block();
+        }
+      }
+    });
+
+
+    //putCar
+    addBehaviour(new CyclicBehaviour(this) {
+      @Override
+      public void action() {
+        ACLMessage msg = receive(MessageTemplate.MatchPerformative(ACLMessage.INFORM));
+        if (msg != null) {
+          System.out.println(msg.getContent() + " added to " + getName());
+          cars.add(msg.getContent());
+          view.addCar(msg.getContent().hashCode());
         }else {
           block();
         }
       }
     });
+
   }
+
 
   private int delay;
   private int inNode;
   private int outNode;
-  private Queue<String> cars;
-  Map<Integer, AID> addresses;
+  private RoadView view;
+  private Queue<String> cars; //cars on road
+  Map<Integer, AID> addresses; //Output roads
   RoadMap roadMap;
 }

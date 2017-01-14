@@ -8,10 +8,9 @@ import java.util.Random;
 public class RoadMap {
   public RoadMap(int n){
     map = new int[n][n];
-    Random random = new Random();
     for(int i = 0; i < n; i++){
       for(int j = 0; j < n; j++){
-        map[i][j] = (random.nextInt() % 250 + 250);
+        map[i][j] = -1;
       }
     }
   }
@@ -22,5 +21,20 @@ public class RoadMap {
   public int get(int i, int j){
     return map[i][j];
   }
+  public void set(int i, int j, int d){
+    if(i >= 0 && j >= 0 && i < map.length && j< map.length) {
+      map[i][j] = d;
+    }
+  }
+
+  public int getFirstRoadFrom(int i){
+    for(int j = 0; j < size(); j++){
+      if(map[i][j] > 0){
+        return j;
+      }
+    }
+    return -1;
+  }
+
   int[][] map;
 }

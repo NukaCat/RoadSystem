@@ -17,20 +17,22 @@ import java.util.Random;
  */
 public class StartAgent extends Agent {
   protected void setup() {
-    int n = 5;
     AgentContainer c = getContainerController();
-    RoadMap roadMap = new RoadMap(n);
+    RoadMap roadMap = City.instance().getMap();
+    int n = roadMap.size();
     ArrayList<AgentController> roads = new ArrayList<>();
+    //road addresses from i node
     Map<Integer, AID>[] addrfrom = new Map[n];
     for(int i = 0; i < n; i++){
       addrfrom[i] = new HashMap<>();
     }
 
     try {
+      Random random = new Random();
       for (int i = 0; i < roadMap.size(); i++) {
         for (int j = 0; j < roadMap.size(); j++) {
           if (roadMap.get(i, j) > 0) {
-            Object s[] = {addrfrom[j], roadMap, i, j, roadMap.get(i, j)};
+            Object s[] = {addrfrom[j], roadMap, i, j, roadMap.get(i, j)*(1000 + random.nextInt()%500)};
             AgentController a = c.createNewAgent("Road(" + i + "," + j + ")", "RoadAgent", s);
             addrfrom[i].put(j, new AID(a.getName(), true));
             roads.add(a);
@@ -44,17 +46,21 @@ public class StartAgent extends Agent {
       e.printStackTrace();
     }
 
-    int carCount = 10;
+    int carCount = 1000;
 
+    //Creatimg cars
     Random r = new Random();
+    int border = City.instance().getBorder(0.5);
     for (int i = 0; i < carCount; i++) {
       try {
-        Object[] arg = {Math.abs(r.nextInt()%n)};
-        AgentController a = c.createNewAgent("Car" + i, "CarAgent", arg);
+        Object[] arg = {Math.abs(r.nextInt()%(n - border)), roadMap};
+        AgentController a = c.createNewAgent("Car" + i, "ShortWayCarAgent", arg);
         a.start();
         ACLMessage out = new ACLMessage(ACLMessage.INFORM);
         out.setContent(a.getName());
-        AID res = addrfrom[Math.abs(r.nextInt()%n)].get(r.nextInt()%n);
+        int k = Math.abs(r.nextInt()%(n - border) + border);
+        int p = roadMap.getFirstRoadFrom(k);
+        AID res = addrfrom[k].get(p);
         out.addReceiver(res);
         send(out);
       } catch (StaleProxyException e) {
