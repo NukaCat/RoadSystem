@@ -38,6 +38,7 @@ public class RoadAgent extends Agent {
             System.out.println("Broken Car at " + getName());
             cars.remove();
             view.removeCar();
+            b.stop();
           }
         }
       }
@@ -59,7 +60,7 @@ public class RoadAgent extends Agent {
       }
     });
 
-    //getInfo
+    //getInfoaboutRoad
     addBehaviour(new CyclicBehaviour(this) {
       @Override
       public void action() {
@@ -86,7 +87,7 @@ public class RoadAgent extends Agent {
     @Override
     public void action() {
       ACLMessage msg = receive(MessageTemplate.MatchPerformative(ACLMessage.PROPOSE));
-      if (msg != null) {
+      if (msg != null && !done) {
         int roadaddr = Integer.parseInt(msg.getContent());
         if (cars.size() > 0 && cars.peek().equals(msg.getSender().getName())) {
           if (roadaddr == -1) {
@@ -110,6 +111,10 @@ public class RoadAgent extends Agent {
       } else {
         block();
       }
+    }
+
+    public void stop(){
+      done = true;
     }
 
     @Override
