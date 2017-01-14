@@ -39,7 +39,7 @@ public abstract class CarAgent extends Agent {
   }
 
   public abstract int choseWay(int node);
-
+  public abstract void start(int inNode, int outNode);
 
   protected RoadMap map;
   protected int destiny;

@@ -18,6 +18,11 @@ public class ShortWayCarAgent extends CarAgent {
     return 1;
   }
 
+  @Override
+  public void start(int inNode, int outNode) {
+
+  }
+
   private void makeWay(int node){
     //deixtra
     int n = map.size();

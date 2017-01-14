@@ -98,7 +98,9 @@ public class City {
       double ab = sqrt(dx * dx + dy * dy);
       int x = toInt((nodes[i].x + nodes[j].x) / 2, w) + (int) (dy / ab * 5);
       int y = toInt((nodes[i].y + nodes[j].y) / 2, h) + (int) (-dx / ab * 5);
-      g.drawString(Integer.toString(view.carCount()), x - 4, y + 4);
+      if(view.carCount() > 0) {
+        g.drawString(Integer.toString(view.carCount()), x - 4, y + 4);
+      }
     });
 
   }

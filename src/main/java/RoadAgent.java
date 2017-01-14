@@ -3,7 +3,6 @@ import jade.core.Agent;
 import jade.core.behaviours.*;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import jade.tools.sniffer.Message;
 
 import java.util.LinkedList;
 import java.util.Map;
@@ -26,46 +25,24 @@ public class RoadAgent extends Agent {
     addBehaviour(new TickerBehaviour(this, delay) {
       @Override
       protected void onTick() {
-        if(cars.size() > 0) {
-          ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-          msg.setContent(outNode + "");
-          AID id = new AID(cars.peek(), true);
-          msg.addReceiver(id);
-          send(msg);
-        }
-      }
-    });
-
-    //listen car
-    addBehaviour(new CyclicBehaviour(this) {
-      @Override
-      public void action() {
-        ACLMessage msg = receive(MessageTemplate.MatchPerformative(ACLMessage.PROPOSE));
-        if (msg != null) {
-          int roadaddr = Integer.parseInt(msg.getContent());
-          if(cars.size() > 0 && cars.peek().equals(msg.getSender().getName())){
-            if(roadaddr == -1){
-              System.out.println("Car " + cars.peek() + "stopped");
-              cars.remove();
-              view.removeCar();
-            }else {
-              if (addresses.containsKey(roadaddr)) {
-                ACLMessage out = new ACLMessage(ACLMessage.INFORM);
-                out.setContent(cars.remove());
-                out.addReceiver(addresses.get(roadaddr));
-                send(out);
-                view.removeCar();
-              } else {
-                System.out.println("Car " + cars.peek() + " proposed wrong address");
-              }
-            }
+        if (cars.size() > 0) {
+          if(b == null || b.done()) {
+            ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+            msg.setContent(outNode + "");
+            AID id = new AID(cars.peek(), true);
+            msg.addReceiver(id);
+            send(msg);
+            b = new ListenCarBehaviour(getAgent());
+            getAgent().addBehaviour(b);
+          }else{
+            System.out.println("Broken Car at " + getName());
+            cars.remove();
+            view.removeCar();
           }
-        }else{
-          block();
         }
       }
+      ListenCarBehaviour b;
     });
-
 
     //putCar
     addBehaviour(new CyclicBehaviour(this) {
@@ -76,12 +53,71 @@ public class RoadAgent extends Agent {
           System.out.println(msg.getContent() + " added to " + getName());
           cars.add(msg.getContent());
           view.addCar(msg.getContent().hashCode());
-        }else {
+        } else {
           block();
         }
       }
     });
 
+    //getInfo
+    addBehaviour(new CyclicBehaviour(this) {
+      @Override
+      public void action() {
+        ACLMessage msg = receive(MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
+        if (msg != null) {
+          ACLMessage out = new ACLMessage(ACLMessage.INFORM);
+          out.setContent(Integer.toString(cars.size()*delay));
+          out.addReceiver(addresses.get(msg.getSender()));
+          send(out);
+        } else {
+          block();
+        }
+      }
+    });
+
+  }
+
+  class ListenCarBehaviour extends Behaviour {
+    public ListenCarBehaviour(Agent agent){
+      super(agent);
+      done = false;
+    }
+
+    @Override
+    public void action() {
+      ACLMessage msg = receive(MessageTemplate.MatchPerformative(ACLMessage.PROPOSE));
+      if (msg != null) {
+        int roadaddr = Integer.parseInt(msg.getContent());
+        if (cars.size() > 0 && cars.peek().equals(msg.getSender().getName())) {
+          if (roadaddr == -1) {
+            System.out.println("Car " + cars.peek() + " stopped");
+            cars.remove();
+            view.removeCar();
+            done = true;
+          } else {
+            if (addresses.containsKey(roadaddr)) {
+              ACLMessage out = new ACLMessage(ACLMessage.INFORM);
+              out.setContent(cars.remove());
+              out.addReceiver(addresses.get(roadaddr));
+              send(out);
+              view.removeCar();
+              done = true;
+            } else {
+              System.out.println("Car " + cars.peek() + " proposed wrong address");
+            }
+          }
+        }
+      } else {
+        block();
+      }
+    }
+
+    @Override
+    public boolean done() {
+      return done;
+    }
+
+    private boolean done;
   }
 
 
@@ -92,4 +128,5 @@ public class RoadAgent extends Agent {
   private Queue<String> cars; //cars on road
   Map<Integer, AID> addresses; //Output roads
   RoadMap roadMap;
+
 }
