@@ -32,7 +32,7 @@ public class StartAgent extends Agent {
       for (int i = 0; i < roadMap.size(); i++) {
         for (int j = 0; j < roadMap.size(); j++) {
           if (roadMap.get(i, j) > 0) {
-            Object s[] = {addrfrom[j], roadMap, i, j, roadMap.get(i, j)*(1000 + random.nextInt()%500)};
+            Object s[] = {addrfrom[j], roadMap, i, j, roadMap.get(i, j)*(1000 + random.nextInt()%500), 10};
             AgentController a = c.createNewAgent("Road(" + i + "," + j + ")", "RoadAgent", s);
             addrfrom[i].put(j, new AID(a.getName(), true));
             roads.add(a);
@@ -46,7 +46,7 @@ public class StartAgent extends Agent {
       e.printStackTrace();
     }
 
-    int carCount = 1000;
+    int carCount = 500;
 
     //Creatimg cars
     Random r = new Random();

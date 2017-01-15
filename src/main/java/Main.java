@@ -7,7 +7,7 @@ public class Main {
     GUI g = new GUI();
     while (true){
       g.step();
-      Thread.sleep(200);
+      Thread.sleep(50);
     }
   }
 }
