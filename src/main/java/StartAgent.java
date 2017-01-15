@@ -12,14 +12,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-/**
- * Created by nuka3 on 12/8/16.
- */
+
 public class StartAgent extends Agent {
   protected void setup() {
     AgentContainer c = getContainerController();
     RoadMap roadMap = City.instance().getMap();
     int n = roadMap.size();
+    YellowPages pages = new YellowPages(n);
     ArrayList<AgentController> roads = new ArrayList<>();
     //road addresses from i node
     Map<Integer, AID>[] addrfrom = new Map[n];
@@ -32,9 +31,13 @@ public class StartAgent extends Agent {
       for (int i = 0; i < roadMap.size(); i++) {
         for (int j = 0; j < roadMap.size(); j++) {
           if (roadMap.get(i, j) > 0) {
-            Object s[] = {addrfrom[j], roadMap, i, j, roadMap.get(i, j)*(1000 + random.nextInt()%500), 10};
+
+            Object s[] = {addrfrom[j], roadMap, i, j, roadMap.get(i, j)*(1000 + random.nextInt()%500),
+                    Math.max(1, (int)(City.instance().getDist(i,j)*70))};
             AgentController a = c.createNewAgent("Road(" + i + "," + j + ")", "RoadAgent", s);
-            addrfrom[i].put(j, new AID(a.getName(), true));
+            AID aid = new AID(a.getName(), true);
+            addrfrom[i].put(j, aid);
+            pages.setAID(aid, i, j);
             roads.add(a);
           }
         }
@@ -53,8 +56,8 @@ public class StartAgent extends Agent {
     int border = City.instance().getBorder(0.5);
     for (int i = 0; i < carCount; i++) {
       try {
-        Object[] arg = {Math.abs(r.nextInt()%(n - border)), roadMap};
-        AgentController a = c.createNewAgent("Car" + i, "ShortWayCarAgent", arg);
+        Object[] arg = {Math.abs(r.nextInt()%(n - border)), roadMap, pages};
+        AgentController a = c.createNewAgent("Car" + i, "CleverCarAgent", arg);
         a.start();
         ACLMessage out = new ACLMessage(ACLMessage.INFORM);
         out.setContent(a.getName());

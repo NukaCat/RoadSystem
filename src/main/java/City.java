@@ -53,6 +53,11 @@ public class City {
     return roadViews.get(i * nodes.length + j);
   }
 
+  public RoadView addRoadView(int i, int j, int size) {
+    roadViews.put(i * nodes.length + j , new RoadView(size));
+    return getRoadView(i, j);
+  }
+
   public int getBorder(double r){
     return ((int)(r*layerCount))*nodePerLayerCount;
   }
@@ -98,11 +103,20 @@ public class City {
       double ab = sqrt(dx * dx + dy * dy);
       int x = toInt((nodes[i].x + nodes[j].x) / 2, w) + (int) (dy / ab * 5);
       int y = toInt((nodes[i].y + nodes[j].y) / 2, h) + (int) (-dx / ab * 5);
-      if(view.carCount() > 0) {
-        g.drawString(Integer.toString(view.carCount()), x - 4, y + 4);
-      }
+      int cx = toInt(nodes[j].x, w) + (int) (dy / ab * 5);
+      int cy = toInt(nodes[j].y, h) + (int) (-dx / ab * 5);
+//      if(view.carCount() > 0) {
+//        g.drawString(Integer.toString(view.carCount()), x - 4, y + 4);
+//      }
+      view.drawCars(g, cx, cy, dx/ab*5, dy/ab*5);
     });
 
+  }
+
+  public double getDist(int i, int j){
+    double x = nodes[i].x - nodes[j].x;
+    double y = nodes[i].y - nodes[j].y;
+    return sqrt(x*x + y*y);
   }
 
   public RoadMap getMap() {

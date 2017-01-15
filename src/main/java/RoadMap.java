@@ -36,5 +36,16 @@ public class RoadMap {
     return -1;
   }
 
+  public RoadMap copy(){
+    int n = map.length;
+    RoadMap r = new RoadMap(n);
+    for(int i = 0; i < n; i++){
+      for(int j = 0; j < n; j++){
+        r.set(i, j, map[i][j]);
+      }
+    }
+    return r;
+  }
+
   int[][] map;
 }

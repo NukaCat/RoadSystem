@@ -19,11 +19,11 @@ public class ShortWayCarAgent extends CarAgent {
   }
 
   @Override
-  public void start(int inNode, int outNode) {
+  public void start(int inNode, int outNode, int start) {
 
   }
 
-  private void makeWay(int node){
+  protected void makeWay(int node){
     //deixtra
     int n = map.size();
     boolean vistednodes[] = new boolean[n];

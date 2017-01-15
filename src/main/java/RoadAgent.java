@@ -24,7 +24,7 @@ public class RoadAgent extends Agent {
 
     lastCarDir = -1;
     lastRoadConversationId = -1;
-    view = City.instance().getRoadView(inNode, outNode);
+    view = City.instance().addRoadView(inNode, outNode, capacity);
 
     FSMBehaviour fsm = new FSMBehaviour();
 
@@ -124,6 +124,11 @@ public class RoadAgent extends Agent {
               lastAcceptedCar = msg.getContent();
               cars.add(msg.getContent());
               view.addCar(msg.getContent().hashCode());
+              ACLMessage carMsg = new ACLMessage(ACLMessage.INFORM_REF);
+              carMsg.setContent(Integer.toString(inNode) + " " + Integer.toString(outNode)
+                      + " " + Integer.toString(cars.size() * delay));
+              carMsg.addReceiver(new AID(msg.getContent(), true));
+              send(carMsg);
             }
             answer.setContent("1");
           } else {
@@ -144,8 +149,9 @@ public class RoadAgent extends Agent {
       public void action() {
         ACLMessage msg = receive(MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
         if (msg != null) {
-          ACLMessage out = new ACLMessage(ACLMessage.INFORM);
-          out.setContent(Integer.toString(cars.size() * delay));
+          ACLMessage out = new ACLMessage(ACLMessage.CONFIRM);
+          out.setContent(Integer.toString(inNode) + " " + Integer.toString(outNode) +
+                  " " + Integer.toString(cars.size() * delay));
           out.addReceiver(addresses.get(msg.getSender()));
           send(out);
         } else {
